@@ -38,7 +38,11 @@ export function useChat(persona: string) {
         setMessages(prev => [...prev, { role: 'user', content: input }])
         setInput('')
 
-        fetchAIResponse([...messages, { role: 'user', content: input }]);
+        fetchAIResponse([
+    { role: 'user', content: '면접을 시작해주세요' },
+    ...messages,
+    { role: 'user', content: input }
+  ])
 
     }
     useEffect(() => {
