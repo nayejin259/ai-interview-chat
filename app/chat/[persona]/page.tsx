@@ -62,7 +62,7 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
                 >
                     {isLoading ? '...' : '전송'}
                 </button>
-                <Mic onClick={handleMic} color={isRecording ? '#ff0000' : '#9ca3af'} />
+                <Mic onClick={handleMic} color={isRecording ? '#ff0000' : '#a6aaaf'} />
             </div>
         </div>
     )
