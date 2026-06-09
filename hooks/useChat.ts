@@ -11,6 +11,7 @@ export function useChat(persona: string) {
         setIsLoading(true)
         setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
+        try{
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -29,8 +30,8 @@ export function useChat(persona: string) {
                 return [...prev.slice(0, -1), { ...last, content: last.content + text }]
             })
         }
-
-        setIsLoading(false)
+}finally{
+        setIsLoading(false)}
     }
     const handleSend = async () => {
         if (isLoading || !input.trim()) return
