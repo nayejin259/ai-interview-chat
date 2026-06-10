@@ -5,51 +5,64 @@ import { personas } from "@/lib/personas"
 import Link from "next/link"
 import { useChat } from "@/hooks/useChat"
 import { useSpeech } from "@/hooks/useSpeech"
-import {Mic} from 'lucide-react'
-
+import { Mic } from 'lucide-react'
+import { useRouter } from "next/navigation"
 
 export default function ChatPage({ params }: { params: Promise<{ persona: string }> }) {
     const { persona } = use(params)
     const { messages, input, setInput, isLoading, handleSend, sendMessage, ref } = useChat(persona)
-    const {handleMic, isRecording} = useSpeech(setInput, sendMessage)
+    const { handleMic, isRecording } = useSpeech(setInput, sendMessage)
     const foundPersona = personas.find(p => p.id === persona)
-
+    const router = useRouter()
 
     return (
         <div className="flex flex-col h-screen bg-gray-50">
+
             {/* 헤더 */}
-            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-                <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm">← 뒤로</Link>
-                <div>
-                    <p className="font-semibold text-gray-900">{foundPersona?.name}</p>
-                    <p className="text-xs text-gray-400">{foundPersona?.description}</p>
+            <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-4 py-3 flex items-center gap-3 text-white">
+                <Link href="/" className="text-white opacity-70 hover:opacity-100 text-sm transition">← 뒤로</Link>
+                <div className="flex-1">
+                    <p className="font-semibold text-sm">{foundPersona?.name}</p>
+                    <p className="text-xs opacity-70">{foundPersona?.description}</p>
                 </div>
+                <button
+                    onClick={() => {
+                        localStorage.setItem('messages', JSON.stringify(messages))
+                        router.push('/report')
+                    }}
+                    className="bg-white/20 hover:bg-white/30 text-white text-xs font-medium rounded-full px-4 py-1.5 transition"
+                >
+                    면접 종료
+                </button>
             </div>
 
             {/* 메시지 목록 */}
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
                 {messages.length === 0 && (
-                    <p className="text-center text-gray-400 text-sm mt-10">면접관이 첫 질문을 기다리고 있어요</p>
+                    <p className="text-center text-gray-400 text-sm mt-10">면접관이 첫 질문을 준비하고 있어요</p>
                 )}
                 {messages.map((m, i) => (
                     <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed ${m.role === 'user'
-                                ? 'bg-blue-500 text-white rounded-br-sm'
-                                : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
-                            }`}>
+                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${m.role === 'user'
+                            ? 'bg-blue-500 text-white rounded-br-sm'
+                            : 'bg-white text-gray-800 rounded-bl-sm'
+                        }`}>
                             <div>{m.content.split("[피드백]")[0]}</div>
-                            <div>[피드백]{m.content.split("[피드백]")[1]}</div>
+                            {m.content.includes("[피드백]") && (
+                                <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400 leading-relaxed">
+                                    [피드백]{m.content.split("[피드백]")[1]}
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
-                <div ref={ref}></div>
+                <div ref={ref} />
             </div>
 
-
             {/* 입력창 */}
-            <div className="bg-white border-t border-gray-200 px-4 py-3 flex gap-2">
+            <div className="bg-white border-t border-gray-100 px-4 py-3 flex gap-2 items-center">
                 <input
-                    className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400"
+                    className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400 transition"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -63,7 +76,12 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
                 >
                     {isLoading ? '...' : '전송'}
                 </button>
-                <Mic onClick={handleMic} color={isRecording ? '#ff0000' : '#a6aaaf'} />
+                <Mic
+                    onClick={handleMic}
+                    size={22}
+                    color={isRecording ? '#3b82f6' : '#d1d5db'}
+                    className="cursor-pointer transition"
+                />
             </div>
         </div>
     )
