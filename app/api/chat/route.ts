@@ -10,6 +10,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
       const model = client.getGenerativeModel({
           model: 'gemini-2.5-flash',
           systemInstruction: foundPersona!.systemPrompt,
+          generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as object,
       });
 
       const history = messages.slice(0, -1).map((m: {role:string, content:string}) => ({

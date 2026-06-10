@@ -10,8 +10,8 @@ import {Mic} from 'lucide-react'
 
 export default function ChatPage({ params }: { params: Promise<{ persona: string }> }) {
     const { persona } = use(params)
-    const { messages, input, setInput, isLoading, handleSend, ref } = useChat(persona)
-    const {handleMic, isRecording} = useSpeech(setInput)
+    const { messages, input, setInput, isLoading, handleSend, sendMessage, ref } = useChat(persona)
+    const {handleMic, isRecording} = useSpeech(setInput, sendMessage)
     const foundPersona = personas.find(p => p.id === persona)
 
 

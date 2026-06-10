@@ -1,32 +1,34 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-var
 declare var webkitSpeechRecognition: any;
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-
-
-export function useSpeech(setInput: (text: string) => void) {
+export function useSpeech(setInput: (text: string) => void, sendMessage: (text: string) => void) {
     const [isRecording, setIsRecording] = useState(false);
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = 'ko-KR'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
-        const text = event.results[0][0].transcript
-        setInput(text)
-    }
+    const recognitionRef = useRef<any>(null);
 
-    // 녹음 시작/중단 토글
     const handleMic = () => {
         if (isRecording) {
-            recognition.stop()
+            recognitionRef.current?.stop()
             setIsRecording(false)
-        } else {
-            recognition.start()
-            setIsRecording(true)
+            return
         }
 
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'ko-KR'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recognition.onresult = (event: any) => {
+            const text = event.results[0][0].transcript
+            setInput(text)
+            sendMessage(text)
+            setIsRecording(false)
+        }
+        recognition.onerror = () => setIsRecording(false)
+        recognitionRef.current = recognition
+        recognition.start()
+        setIsRecording(true)
     }
 
     return { handleMic, isRecording }
-
 }

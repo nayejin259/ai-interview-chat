@@ -33,18 +33,18 @@ export function useChat(persona: string) {
 }finally{
         setIsLoading(false)}
     }
-    const handleSend = async () => {
-        if (isLoading || !input.trim()) return
-        setMessages(prev => [...prev, { role: 'user', content: input }])
+    const sendMessage = (text: string) => {
+        if (isLoading || !text.trim()) return
+        const newMessages = [...messages, { role: 'user', content: text }]
+        setMessages(newMessages)
         setInput('')
-
         fetchAIResponse([
-    { role: 'user', content: '면접을 시작해주세요' },
-    ...messages,
-    { role: 'user', content: input }
-  ])
-
+            { role: 'user', content: '면접을 시작해주세요' },
+            ...newMessages,
+        ])
     }
+
+    const handleSend = () => sendMessage(input)
     useEffect(() => {
         const triggerMessage = async () =>
             fetchAIResponse([{ role: 'user', content: '면접을 시작해주세요' }])
@@ -57,6 +57,6 @@ export function useChat(persona: string) {
         })
     }, [messages])
 
-    return { messages, input, setInput, isLoading, handleSend, ref }
+    return { messages, input, setInput, isLoading, handleSend, sendMessage, ref }
 
 }
