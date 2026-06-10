@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
-import { personas } from "@/lib/personas";
+import { buildSystemPrompt } from "@/lib/personas";
 
 const client = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY! });
 
 export async function POST(req: Request) {
-    const { messages, personaId } = await req.json();
-    const foundPersona = personas.find((p) => p.id === personaId);
+    const { messages, company, role, level } = await req.json();
+    const systemPrompt = buildSystemPrompt(company, role, level);
 
     const contents = messages.map((m: { role: string, content: string }) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         model: 'gemini-2.5-flash',
         contents,
         config: {
-            systemInstruction: foundPersona!.systemPrompt,
+            systemInstruction: systemPrompt,
             thinkingConfig: { thinkingBudget: 0 },
         },
     });

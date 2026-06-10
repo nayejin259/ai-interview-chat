@@ -1,19 +1,26 @@
 'use client'
 
-import { use } from "react"
-import { personas } from "@/lib/personas"
-import Link from "next/link"
-import { useChat } from "@/hooks/useChat"
-import { useSpeech } from "@/hooks/useSpeech"
+import { Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useChat } from '@/hooks/useChat'
+import { useSpeech } from '@/hooks/useSpeech'
 import { Mic } from 'lucide-react'
-import { useRouter } from "next/navigation"
+import { companies, roles, levels } from '@/lib/personas'
 
-export default function ChatPage({ params }: { params: Promise<{ persona: string }> }) {
-    const { persona } = use(params)
-    const { messages, input, setInput, isLoading, handleSend, sendMessage, ref } = useChat(persona)
+function ChatContent() {
+    const searchParams = useSearchParams()
+    const company = searchParams.get('company') ?? ''
+    const role = searchParams.get('role') ?? ''
+    const level = searchParams.get('level') ?? ''
+
+    const { messages, input, setInput, isLoading, handleSend, sendMessage, ref } = useChat(company, role, level)
     const { handleMic, isRecording } = useSpeech(setInput, sendMessage)
-    const foundPersona = personas.find(p => p.id === persona)
     const router = useRouter()
+
+    const companyName = companies.find(c => c.id === company)?.name ?? ''
+    const roleName = roles.find(r => r.id === role)?.name ?? ''
+    const levelName = levels.find(l => l.id === level)?.name ?? ''
 
     return (
         <div className="flex flex-col h-screen bg-gray-50">
@@ -22,8 +29,8 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
             <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-4 py-3 flex items-center gap-3 text-white">
                 <Link href="/" className="text-white opacity-70 hover:opacity-100 text-sm transition">← 뒤로</Link>
                 <div className="flex-1">
-                    <p className="font-semibold text-sm">{foundPersona?.name}</p>
-                    <p className="text-xs opacity-70">{foundPersona?.description}</p>
+                    <p className="font-semibold text-sm">{companyName} · {roleName}</p>
+                    <p className="text-xs opacity-70">{levelName} 면접</p>
                 </div>
                 <button
                     onClick={() => {
@@ -46,7 +53,7 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
                         <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${m.role === 'user'
                             ? 'bg-blue-500 text-white rounded-br-sm'
                             : 'bg-white text-gray-800 rounded-bl-sm'
-                        }`}>
+                            }`}>
                             <div>{m.content.split("[피드백]")[0]}</div>
                             {m.content.includes("[피드백]") && (
                                 <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400 leading-relaxed">
@@ -84,5 +91,13 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
                 />
             </div>
         </div>
+    )
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense>
+            <ChatContent />
+        </Suspense>
     )
 }
