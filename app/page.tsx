@@ -14,7 +14,7 @@ export default function Home() {
 
     const handleStart = () => {
         const params = new URLSearchParams({ company: selectedCompany, role: selectedRole, level: selectedLevel })
-        router.push(`/chat?${params}`)
+        router.push(`/resume?${params}`)
     }
 
     return (
