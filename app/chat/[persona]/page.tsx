@@ -37,7 +37,8 @@ export default function ChatPage({ params }: { params: Promise<{ persona: string
                                 ? 'bg-blue-500 text-white rounded-br-sm'
                                 : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
                             }`}>
-                            {m.content}
+                            <div>{m.content.split("[피드백]")[0]}</div>
+                            <div>[피드백]{m.content.split("[피드백]")[1]}</div>
                         </div>
                     </div>
                 ))}
