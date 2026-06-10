@@ -11,11 +11,11 @@ interface Report {
 }
 
 export default function ReportPage() {
-    const messages = JSON.parse(localStorage.getItem('messages') || '[]')
     const [report, setReport] = useState<Report | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
     const fetchReport = async () => {
+        const messages = JSON.parse(localStorage.getItem('messages') || '[]')
         setIsLoading(true);
         try {
             const res = await fetch('/api/report', {
