@@ -13,6 +13,7 @@ interface Report {
 export default function ReportPage() {
     const [report, setReport] = useState<Report | null>(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const fetchReport = async () => {
         const messages = JSON.parse(localStorage.getItem('messages') || '[]')
@@ -23,8 +24,11 @@ export default function ReportPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(messages)
             })
-            if (!res.ok) throw new Error(`${res.status}`)
             const data = await res.json()
+            if (!res.ok) {
+                setError(data.error ?? '리포트 생성에 실패했어요.')
+                return
+            }
             setReport(data)
         } finally {
             setIsLoading(false)
@@ -60,6 +64,13 @@ export default function ReportPage() {
                     <div className="bg-white rounded-2xl shadow-sm px-6 py-10 flex flex-col items-center gap-4">
                         <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         <p className="text-sm text-gray-400">AI가 면접을 분석하고 있어요...</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="bg-white rounded-2xl shadow-sm px-6 py-8 flex flex-col items-center gap-4 text-center">
+                        <p className="text-sm text-red-400">{error}</p>
+                        <button onClick={fetchReport} className="text-sm text-blue-500 hover:text-blue-600">다시 시도</button>
                     </div>
                 )}
 
