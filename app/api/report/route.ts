@@ -22,13 +22,23 @@ export async function POST(req: Request) {
 }` }],
     });
 
-    const result = await client.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents,
-        config: { responseMimeType: 'application/json' },
-    });
+    let result;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            result = await client.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents,
+                config: { responseMimeType: 'application/json' },
+            });
+            break;
+        } catch (e: unknown) {
+            const isRetryable = e instanceof Error && e.message.includes('503');
+            if (!isRetryable || attempt === 2) throw e;
+            await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+        }
+    }
 
-    return new Response(result.text, {
+    return new Response(result!.text, {
         headers: { 'Content-Type': 'application/json' },
     });
 }

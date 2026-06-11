@@ -54,11 +54,21 @@ function ChatContent() {
                             ? 'bg-blue-500 text-white rounded-br-sm'
                             : 'bg-white text-gray-800 rounded-bl-sm'
                             }`}>
-                            <div>{m.content.split("[피드백]")[0]}</div>
-                            {m.content.includes("[피드백]") && (
-                                <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400 leading-relaxed">
-                                    [피드백]{m.content.split("[피드백]")[1]}
-                                </div>
+                            {m.role === 'assistant' && m.content === '' ? (
+                                <span className="flex gap-1 items-center py-1">
+                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:0ms]" />
+                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:150ms]" />
+                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:300ms]" />
+                                </span>
+                            ) : (
+                                <>
+                                    <div>{m.content.split("[피드백]")[0]}</div>
+                                    {m.content.includes("[피드백]") && (
+                                        <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400 leading-relaxed">
+                                            [피드백]{m.content.split("[피드백]")[1]}
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
