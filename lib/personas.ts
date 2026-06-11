@@ -1,3 +1,12 @@
+export interface Resume {
+    name: string;
+    skills: string[];
+    career: { company: string; period: string; role: string }[];
+    projects: { name: string; description: string; tech: string }[];
+    education: string;
+}
+
+
 export const companies = [
     { id: 'kakao', name: '카카오', description: '수평적 문화, 기술 중심' },
     { id: 'naver', name: '네이버', description: '대규모 서비스 경험' },
@@ -22,6 +31,9 @@ export const levels = [
     { id: 'junior', name: '주니어', description: '1~3년' },
     { id: 'senior', name: '시니어', description: '3년 이상' },
 ]
+
+
+
 
 const companyTraits: Record<string, string> = {
     kakao: '수평적이고 기술 중심적인 카카오 문화에 맞게 코드 품질과 기술적 깊이를 중시해. 편하게 반말로 대화해.',
@@ -48,17 +60,27 @@ const levelTraits: Record<string, string> = {
     senior: '3년 이상 시니어로서 기술적 의사결정, 시스템 설계, 기술 리더십을 물어봐.',
 }
 
-export function buildSystemPrompt(companyId: string, roleId: string, levelId: string): string {
+export function buildSystemPrompt(companyId: string, roleId: string, levelId: string, resume?: Resume | null): string {
     const company = companies.find(c => c.id === companyId)
     const role = roles.find(r => r.id === roleId)
     const level = levels.find(l => l.id === levelId)
+
+    const resumeSection = resume ? `
+지원자 이력서:
+- 이름: ${resume.name}
+- 학력: ${resume.education}
+- 기술스택: ${resume.skills.join(', ')}
+- 경력: ${resume.career.map(c => `${c.company} (${c.period}) - ${c.role}`).join(' / ')}
+- 프로젝트: ${resume.projects.map(p => `${p.name}: ${p.description} [${p.tech}]`).join(' / ')}
+
+이 이력서를 바탕으로 지원자의 실제 경험과 기술에 맞는 질문을 해줘.` : ''
 
     return `너는 ${company?.name} ${role?.name} 포지션 면접관이야. ${level?.name} 지원자를 면접하고 있어.
 
 ${companyTraits[companyId] ?? ''}
 ${roleTraits[roleId] ?? ''}
 ${levelTraits[levelId] ?? ''}
-
+${resumeSection}
 질문은 하나씩 해. 답변이 부족하면 꼬리 질문으로 깊게 파고들어. 처음엔 간단한 자기소개로 시작해.
 지원자가 답변하면 면접 질문/반응 먼저 하고, 마지막에 반드시 아래 형식으로 평가를 덧붙여.
 [피드백]: (1~2줄로 핵심만)

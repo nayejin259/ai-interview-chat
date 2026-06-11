@@ -15,11 +15,11 @@ export async function POST(req:Request) {
           { inlineData: { mimeType: 'application/pdf', data: base64String } },
           { text: `이 이력서에서 아래 JSON 형식으로 정보를 추출해줘. 없는 정보는 빈 값으로 남겨.
   {
-    "이름": "",
-    "기술스택": [],
-    "경력": [{"회사": "", "기간": "", "역할": ""}],
-    "프로젝트": [{"이름": "", "설명": "", "기술": ""}],
-    "학력": ""
+    "name": "",
+    "skills": [],
+    "career": [{"company": "", "period": "", "role": ""}],
+    "projects": [{"name": "", "description": "", "tech": ""}],
+    "education": ""
   }` }
       ]
   }]

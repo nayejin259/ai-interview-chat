@@ -2,18 +2,24 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react"
+import { Resume } from "@/lib/personas";
 
-interface Resume {
-    이름: string;
-    기술스택: string[];
-    경력: { 회사: string; 기간: string; 역할: string }[];
-    프로젝트: { 이름: string; 설명: string; 기술: string }[];
-    학력: string;
+const careerLabels: Record<keyof Resume['career'][0], string> = {
+    company: '회사',
+    period: '기간',
+    role: '역할',
+}
+
+const projectLabels: Record<keyof Resume['projects'][0], string> = {
+    name: '이름',
+    description: '설명',
+    tech: '기술',
 }
 
 function ResumeContent() {
     const [isLoading, setIsLoading] = useState(false)
     const [resume, setResume] = useState<Resume | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const params = searchParams.toString();
@@ -31,25 +37,32 @@ function ResumeContent() {
         }
     }
 
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        const file = e.dataTransfer.files?.[0]
+        if (file?.type === 'application/pdf') fetchPDF(file)
+    }
+
     const updateField = <K extends keyof Resume>(key: K, value: Resume[K]) => {
         setResume(prev => prev ? { ...prev, [key]: value } : null)
     }
 
-    const updateCareer = (i: number, field: keyof Resume['경력'][0], value: string) => {
+    const updateCareer = (i: number, field: keyof Resume['career'][0], value: string) => {
         setResume(prev => {
             if (!prev) return null
-            const updated = [...prev.경력]
+            const updated = [...prev.career]
             updated[i] = { ...updated[i], [field]: value }
-            return { ...prev, 경력: updated }
+            return { ...prev, career: updated }
         })
     }
 
-    const updateProject = (i: number, field: keyof Resume['프로젝트'][0], value: string) => {
+    const updateProject = (i: number, field: keyof Resume['projects'][0], value: string) => {
         setResume(prev => {
             if (!prev) return null
-            const updated = [...prev.프로젝트]
+            const updated = [...prev.projects]
             updated[i] = { ...updated[i], [field]: value }
-            return { ...prev, 프로젝트: updated }
+            return { ...prev, projects: updated }
         })
     }
 
@@ -66,15 +79,28 @@ function ResumeContent() {
             <div className="max-w-2xl mx-auto px-4 -mt-8 pb-12 flex flex-col gap-4">
 
                 {/* PDF 업로드 */}
-                <label className="bg-white rounded-2xl shadow-sm px-6 py-8 flex flex-col items-center gap-3 cursor-pointer hover:shadow-md transition border-2 border-dashed border-gray-200 hover:border-blue-400">
+                <label
+                    className={`bg-white rounded-2xl shadow-sm px-6 py-8 flex flex-col items-center gap-3 cursor-pointer hover:shadow-md transition border-2 border-dashed ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-400'}`}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                >
                     <span className="text-3xl">📄</span>
-                    <p className="text-sm font-medium text-gray-700">PDF 파일 선택</p>
+                    <p className="text-sm font-medium text-gray-700">PDF 파일 선택 또는 드래그</p>
                     <p className="text-xs text-gray-400">이력서 또는 포트폴리오 PDF</p>
                     <input type="file" accept=".pdf" className="hidden" onChange={(e) => {
                         const file = e.target.files?.[0]
                         if (file) fetchPDF(file)
                     }} />
                 </label>
+
+                {/* 건너뛰기 */}
+                <button
+                    onClick={() => router.push(`/chat?${params}`)}
+                    className="text-sm text-gray-400 hover:text-gray-600 transition text-center"
+                >
+                    이력서 없이 시작하기 →
+                </button>
 
                 {/* 로딩 */}
                 {isLoading && (
@@ -92,8 +118,8 @@ function ResumeContent() {
                             <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-3">이름</p>
                             <input
                                 className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-400 transition"
-                                value={resume.이름}
-                                onChange={(e) => updateField('이름', e.target.value)}
+                                value={resume.name}
+                                onChange={(e) => updateField('name', e.target.value)}
                             />
                         </div>
 
@@ -102,8 +128,8 @@ function ResumeContent() {
                             <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-3">학력</p>
                             <input
                                 className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-400 transition"
-                                value={resume.학력}
-                                onChange={(e) => updateField('학력', e.target.value)}
+                                value={resume.education}
+                                onChange={(e) => updateField('education', e.target.value)}
                             />
                         </div>
 
@@ -111,10 +137,10 @@ function ResumeContent() {
                         <div className="bg-white rounded-2xl shadow-sm px-6 py-5">
                             <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-3">기술스택</p>
                             <div className="flex flex-wrap gap-2 mb-3">
-                                {resume.기술스택.map((skill, i) => (
+                                {resume.skills.map((skill, i) => (
                                     <span key={i} className="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-3 py-1 rounded-full">
                                         {skill}
-                                        <button onClick={() => updateField('기술스택', resume.기술스택.filter((_, j) => j !== i))} className="text-blue-400 hover:text-blue-600">✕</button>
+                                        <button onClick={() => updateField('skills', resume.skills.filter((_, j) => j !== i))} className="text-blue-400 hover:text-blue-600">✕</button>
                                     </span>
                                 ))}
                             </div>
@@ -125,7 +151,7 @@ function ResumeContent() {
                                     if (e.key === 'Enter') {
                                         const val = (e.target as HTMLInputElement).value.trim()
                                         if (val) {
-                                            updateField('기술스택', [...resume.기술스택, val]);
+                                            updateField('skills', [...resume.skills, val]);
                                             (e.target as HTMLInputElement).value = ''
                                         }
                                     }
@@ -138,21 +164,21 @@ function ResumeContent() {
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest">경력</p>
                                 <button
-                                    onClick={() => updateField('경력', [...resume.경력, { 회사: '', 기간: '', 역할: '' }])}
+                                    onClick={() => updateField('career', [...resume.career, { company: '', period: '', role: '' }])}
                                     className="text-xs text-blue-500 hover:text-blue-600"
                                 >+ 추가</button>
                             </div>
                             <div className="flex flex-col gap-3">
-                                {resume.경력.map((c, i) => (
+                                {resume.career.map((c, i) => (
                                     <div key={i} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-2">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-gray-400">경력 {i + 1}</span>
-                                            <button onClick={() => updateField('경력', resume.경력.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-500">삭제</button>
+                                            <button onClick={() => updateField('career', resume.career.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-500">삭제</button>
                                         </div>
-                                        {(['회사', '기간', '역할'] as const).map(field => (
+                                        {(['company', 'period', 'role'] as const).map(field => (
                                             <input
                                                 key={field}
-                                                placeholder={field}
+                                                placeholder={careerLabels[field]}
                                                 className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-400 transition"
                                                 value={c[field]}
                                                 onChange={(e) => updateCareer(i, field, e.target.value)}
@@ -168,21 +194,21 @@ function ResumeContent() {
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest">프로젝트</p>
                                 <button
-                                    onClick={() => updateField('프로젝트', [...resume.프로젝트, { 이름: '', 설명: '', 기술: '' }])}
+                                    onClick={() => updateField('projects', [...resume.projects, { name: '', description: '', tech: '' }])}
                                     className="text-xs text-blue-500 hover:text-blue-600"
                                 >+ 추가</button>
                             </div>
                             <div className="flex flex-col gap-3">
-                                {resume.프로젝트.map((p, i) => (
+                                {resume.projects.map((p, i) => (
                                     <div key={i} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-2">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-gray-400">프로젝트 {i + 1}</span>
-                                            <button onClick={() => updateField('프로젝트', resume.프로젝트.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-500">삭제</button>
+                                            <button onClick={() => updateField('projects', resume.projects.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-500">삭제</button>
                                         </div>
-                                        {(['이름', '설명', '기술'] as const).map(field => (
+                                        {(['name', 'description', 'tech'] as const).map(field => (
                                             <input
                                                 key={field}
-                                                placeholder={field}
+                                                placeholder={projectLabels[field]}
                                                 className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-400 transition"
                                                 value={p[field]}
                                                 onChange={(e) => updateProject(i, field, e.target.value)}
