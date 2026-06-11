@@ -8,22 +8,26 @@ export async function POST(req: Request) {
     try {
         const messages = await req.json();
 
-        const contents = messages.map((m: { role: string, content: string }) => ({
+        const firstUserIdx = messages.findIndex((m: { role: string }) => m.role === 'user')
+        const trimmed = firstUserIdx >= 0 ? messages.slice(firstUserIdx) : messages
+
+        const contents = trimmed.map((m: { role: string, content: string }) => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }],
         }));
 
-        contents.push({
-            role: 'user',
-            parts: [{ text: `이 면접 대화에서 지원자(user)의 답변만 평가해줘. 면접관 질문은 맥락 파악용으로만 참고해.
+        if (contents.length === 0 || contents[contents.length - 1].role === 'model') {
+            contents.push({ role: 'user', parts: [{ text: '지금까지의 면접을 평가해줘.' }] })
+        }
+
+        const systemInstruction = `면접 대화에서 지원자(user)의 답변만 평가해줘. 면접관 발언은 맥락 파악용으로만 참고해.
 아래 JSON 형식으로만 응답해. 다른 텍스트는 절대 포함하지 마.
 {
   "총점": "X/10",
   "총평": "2~3줄 종합 평가",
   "강점": ["강점1", "강점2", "강점3"],
   "개선점": ["개선점1", "개선점2", "개선점3"]
-}` }],
-        });
+}`
 
         let result;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -32,6 +36,7 @@ export async function POST(req: Request) {
                     model: 'gemini-2.5-flash',
                     contents,
                     config: {
+                        systemInstruction,
                         responseMimeType: 'application/json',
                         thinkingConfig: { thinkingBudget: 0 },
                     },

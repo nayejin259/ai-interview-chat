@@ -17,7 +17,8 @@ export default function ReportPage() {
 
     const fetchReport = async () => {
         const messages = JSON.parse(localStorage.getItem('messages') || '[]')
-        setIsLoading(true);
+        setIsLoading(true)
+        setError(null)
         try {
             const res = await fetch('/api/report', {
                 method: 'POST',
